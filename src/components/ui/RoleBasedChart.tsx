@@ -44,6 +44,14 @@ interface RoleBasedChartProps {
   description?: string;
 }
 
+// Default empty data structure
+const defaultData = {
+  labels: [],
+  datasets: [{
+    data: [],
+  }],
+};
+
 export function RoleBasedChart({
   type,
   data,

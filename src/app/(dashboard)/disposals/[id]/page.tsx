@@ -101,7 +101,7 @@ export default function DisposalDetailsPage({
       <div className="max-w-2xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold">Disposal Request Details</h1>
-          <RoleBasedBadge status={disposal.status} />
+          <RoleBasedBadge status={disposal.status} label={disposal.status} />
         </div>
 
         <div className="bg-white shadow rounded-lg p-6 space-y-4">

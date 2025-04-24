@@ -6,8 +6,7 @@ export interface AssetStats {
   totalAssets: number;
   totalValue: number;
   activeAssets: number;
-  maintenanceCost: number;
-  totalDepreciation: number;
+  maintenanceDue: number;
   assetGrowth: number;
   valueGrowth: number;
 }
@@ -33,6 +32,7 @@ export interface AssetValueData {
 export interface AssetDepartmentData {
   department: string;
   count: number;
+  value: number;
 }
 
 export interface DepreciationData {
@@ -165,6 +165,8 @@ export interface RoleBasedCardProps {
 export interface Column<T> {
   key: keyof T;
   header: string;
+  accessorKey?: keyof T;
+  cell?: (props: { row: { original: T } }) => React.ReactNode;
   permission?: string;
   render?: (value: T[keyof T], item: T) => React.ReactNode;
   className?: string;

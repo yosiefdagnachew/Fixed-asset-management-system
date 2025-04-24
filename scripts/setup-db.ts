@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const { hash } = require('bcryptjs');
 const { execSync } = require('child_process');
 

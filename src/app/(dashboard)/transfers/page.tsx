@@ -111,7 +111,7 @@ export default function TransfersPage() {
         data={transfers}
         columns={columns}
         loading={loading}
-        onRowClick={(row) => router.push(`/transfers/${row.original.id}`)}
+        onRowClick={(row) => router.push(`/transfers/${row.id}`)}
       />
     </div>
   );

@@ -5,6 +5,7 @@ interface RoleBasedBadgeProps {
   label: string;
   variant?: 'success' | 'warning' | 'danger' | 'default';
   className?: string;
+  status?: string;
 }
 
 export function RoleBasedBadge({ label, variant = 'default', className }: RoleBasedBadgeProps) {

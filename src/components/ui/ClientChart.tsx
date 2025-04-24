@@ -22,6 +22,14 @@ const ChartComponents = {
   heatmap: Bar as any, // Using Bar as base for heatmap
 } as const;
 
+// Default empty data structure
+const defaultData = {
+  labels: [],
+  datasets: [{
+    data: [],
+  }],
+};
+
 export function ClientChart({ type, data, options }: ClientChartProps) {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -41,6 +49,9 @@ export function ClientChart({ type, data, options }: ClientChartProps) {
     return null;
   }
 
+  // Ensure data is properly structured
+  const chartData = data?.datasets ? data : defaultData;
+
   // Use a key to force re-render when type changes
-  return <ChartComponent key={type} data={data} options={options} />;
+  return <ChartComponent key={type} data={chartData} options={options} />;
 } 

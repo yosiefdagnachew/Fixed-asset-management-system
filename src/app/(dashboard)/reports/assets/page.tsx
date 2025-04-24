@@ -11,17 +11,15 @@ import type {
   AssetStatusData,
   AssetValueData,
   AssetCategoryData,
+  AssetDepartmentData,
   Column,
-  ChartType,
-  RoleBasedStatsProps
 } from '@/types/reports';
-import type { Asset } from '@/types/asset';
 
 export default function AssetReportsPage() {
   const [loading, setLoading] = useState(true);
   const [assetStats, setAssetStats] = useState<AssetStats | null>(null);
   const [assetsByCategory, setAssetsByCategory] = useState<AssetCategoryData[]>([]);
-  const [assetsByDepartment, setAssetsByDepartment] = useState<AssetCategoryData[]>([]);
+  const [assetsByDepartment, setAssetsByDepartment] = useState<AssetDepartmentData[]>([]);
   const [depreciationData, setDepreciationData] = useState<AssetValueData[]>([]);
   const [statusDistribution, setStatusDistribution] = useState<AssetStatusData[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
@@ -39,10 +37,10 @@ export default function AssetReportsPage() {
       const data = await response.json();
       
       setAssetStats(data.stats);
-      setAssetsByCategory(data.byCategory);
-      setAssetsByDepartment(data.byDepartment);
-      setDepreciationData(data.depreciation);
-      setStatusDistribution(data.statusDistribution);
+      setAssetsByCategory(data.byCategory || []);
+      setAssetsByDepartment(data.byDepartment || []);
+      setDepreciationData(data.depreciation || []);
+      setStatusDistribution(data.statusDistribution || []);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -78,6 +76,72 @@ export default function AssetReportsPage() {
       </div>
     );
   }
+
+  const detailedColumns = [
+    {
+      key: 'category',
+      header: 'Category',
+      accessorKey: 'category',
+    },
+    {
+      key: 'count',
+      header: 'Total Assets',
+      accessorKey: 'count',
+    },
+    {
+      key: 'value',
+      header: 'Total Value',
+      accessorKey: 'value',
+      cell: ({ row }: { row: { original: AssetCategoryData } }) => 
+        `$${row.original.value.toFixed(2)}`,
+    },
+    {
+      key: 'avgValue',
+      header: 'Average Value',
+      accessorKey: 'value',
+      cell: ({ row }: { row: { original: AssetCategoryData } }) => 
+        `$${(row.original.value / row.original.count).toFixed(2)}`,
+    },
+    {
+      key: 'valuePerAsset',
+      header: 'Value per Asset',
+      accessorKey: 'value',
+      cell: ({ row }: { row: { original: AssetCategoryData } }) => 
+        `$${(row.original.value / row.original.count).toFixed(2)}`,
+    },
+  ] as Column<AssetCategoryData>[];
+
+  const departmentColumns = [
+    {
+      key: 'department',
+      header: 'Department',
+      accessorKey: 'department',
+    },
+    {
+      key: 'count',
+      header: 'Asset Count',
+      accessorKey: 'count',
+    },
+    {
+      key: 'value',
+      header: 'Total Value',
+      accessorKey: 'value',
+      cell: ({ row }: { row: { original: AssetDepartmentData } }) => 
+        `$${row.original.value.toFixed(2)}`,
+    },
+    {
+      key: 'avgValue',
+      header: 'Average Value',
+      accessorKey: 'value',
+      cell: ({ row }: { row: { original: AssetDepartmentData } }) => 
+        `$${(row.original.value / row.original.count).toFixed(2)}`,
+    },
+  ] as Column<AssetDepartmentData>[];
+
+  const exportColumns = detailedColumns.map(col => ({
+    header: col.header,
+    accessorKey: col.accessorKey as string,
+  }));
 
   return (
     <div className="container mx-auto p-6">
@@ -262,6 +326,24 @@ export default function AssetReportsPage() {
       </div>
 
       {/* Asset Value Table */}
+      <div className="bg-white rounded-lg shadow mb-8">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Asset Value Details by Category</h2>
+            <ExportButton
+              data={assetsByCategory}
+              columns={exportColumns}
+              fileName="Asset_Category_Details"
+            />
+          </div>
+          <RoleBasedTable
+            data={assetsByCategory}
+            columns={detailedColumns}
+          />
+        </div>
+      </div>
+
+      {/* Department Asset Table */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">

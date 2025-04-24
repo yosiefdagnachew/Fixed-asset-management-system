@@ -86,7 +86,9 @@ export default function MaintenanceRequestDetailsPage({
       <div className="max-w-2xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold">Maintenance Request Details</h1>
-          <RoleBasedBadge status={request.status} />
+          <RoleBasedBadge 
+            label={request.status} 
+          />
         </div>
 
         <div className="bg-white shadow rounded-lg p-6 space-y-4">
