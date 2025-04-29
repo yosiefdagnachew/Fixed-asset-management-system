@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "npm package.json file",
+  "description": "A package.json file for npm packages",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the package"
+    },
+    "version": {
+      "type": "string",
+      "description": "The version of the package"
+    },
+    "private": {
+      "type": "boolean",
+      "description": "Whether the package is private"
+    },
+    "scripts": {
+      "type": "object",
+      "description": "Script commands that are run at various times in the lifecycle of the package",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "description": "Dependencies required by the package",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "devDependencies": {
+      "type": "object",
+      "description": "Development dependencies required by the package",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": ["name", "version"]
+} 

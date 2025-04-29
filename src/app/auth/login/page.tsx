@@ -1,5 +1,6 @@
 "use client";
 
+<<<<<<< HEAD
 import React, { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -9,6 +10,16 @@ import { z } from "zod";
 //import toast from "react-hot-toast";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+=======
+import React from 'react';
+import { useState } from 'react';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'react-hot-toast';
+>>>>>>> 56d1f01 (user management)
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -17,8 +28,17 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+import { useSession } from "next-auth/react";
+
 export default function LoginPage() {
   const router = useRouter();
+  const { status } = useSession();
+
+  React.useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/dashboard");
+    }
+  }, [status, router]);
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -37,15 +57,23 @@ export default function LoginPage() {
         password: data.password,
         redirect: false,
       });
+      console.log('signIn result:', result);
 
       if (result?.error) {
         toast.error("Invalid credentials");
         return;
       }
 
+<<<<<<< HEAD
       toast.success("Signed in successfully");
       router.push("/dashboard");
       router.refresh();
+=======
+      if (result?.ok) {
+        router.push('/dashboard');
+        router.refresh();
+      }
+>>>>>>> 56d1f01 (user management)
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Something went wrong");

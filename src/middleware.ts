@@ -13,7 +13,7 @@ export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const isAuth = !!token;
-    const isAuthPage = req.nextUrl.pathname.startsWith("/login");
+    const isAuthPage = req.nextUrl.pathname === "/auth/login";
 
     if (isAuthPage) {
       if (isAuth) {
@@ -29,17 +29,23 @@ export default withAuth(
       }
 
       return NextResponse.redirect(
-        new URL(`/login?from=${encodeURIComponent(from)}`, req.url)
+        new URL(`/auth/login?from=${encodeURIComponent(from)}`, req.url)
       );
     }
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req }) => {
+        // Allow access to login page without authentication
+        if (req.nextUrl.pathname === "/auth/login") {
+          return true;
+        }
+        return !!token;
+      },
     },
   }
 );
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login"],
+  matcher: ["/dashboard/:path*", "/auth/login"],
 }; 

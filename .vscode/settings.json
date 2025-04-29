@@ -3,5 +3,11 @@
   "tailwindCSS.emmetCompletions": true,
   "editor.quickSuggestions": {
     "strings": true
-  }
+  },
+  "json.schemas": [
+    {
+      "fileMatch": ["package.json"],
+      "url": "./package-schema.json"
+    }
+  ]
 } 

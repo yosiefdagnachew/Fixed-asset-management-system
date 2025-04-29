@@ -27,6 +27,7 @@ Chart.register(
   ArcElement
 );
 
+<<<<<<< HEAD
 interface DashboardData {
   stats: {
     totalAssets: number;
@@ -42,10 +43,44 @@ interface DashboardData {
     status: string;
     count: number;
   }>;
+=======
+const monthlyDepreciationData = {
+  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  datasets: [
+    {
+      label: 'Monthly Depreciation',
+      data: [65, 59, 80, 81, 56, 55],
+      backgroundColor: 'rgba(75, 192, 192, 0.6)',
+    },
+  ],
+};
+
+import { useEffect, useState } from 'react';
+
+interface Asset {
+  id: string;
+  name: string;
+  description?: string | null;
+  serialNumber: string;
+  purchaseDate: string;
+  purchasePrice: number;
+  currentValue: number;
+  status: string;
+  location?: string | null;
+  department?: string | null;
+  category?: string | null;
+  supplier?: string | null;
+  warrantyExpiry?: string | null;
+  lastMaintenance?: string | null;
+  nextMaintenance?: string | null;
+  createdAt: string;
+  updatedAt: string;
+>>>>>>> 56d1f01 (user management)
 }
 
 export default function DashboardPage() {
   const { data: session } = useSession();
+<<<<<<< HEAD
   
   const { data: dashboardData, isLoading } = useQuery<DashboardData>({
     queryKey: ['dashboardData'],
@@ -84,6 +119,48 @@ export default function DashboardPage() {
     datasets: [
       {
         data: dashboardData?.statusDistribution.map((item) => item.count) || [],
+=======
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAssets = async () => {
+      try {
+        const response = await fetch('/api/assets');
+        if (!response.ok) throw new Error('Failed to fetch assets');
+        const data = await response.json();
+        setAssets(data);
+      } catch (error) {
+        setAssets([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAssets();
+  }, []);
+
+  const activeAssets = assets.filter(a => a.status === 'ACTIVE').length;
+  const maintenanceAssets = assets.filter(a => a.status === 'UNDER_MAINTENANCE').length;
+  const totalValue = assets.reduce((acc, a) => acc + (a.currentValue || 0), 0);
+
+  const stats = [
+    { name: 'Total Assets', value: assets.length },
+    { name: 'Active Assets', value: activeAssets },
+    { name: 'Under Maintenance', value: maintenanceAssets },
+    { name: 'Total Value', value: `$${totalValue.toLocaleString()}` },
+  ];
+
+  const assetStatusData = {
+    labels: ['Active', 'Under Maintenance', 'Transferred', 'Disposed'],
+    datasets: [
+      {
+        data: [
+          assets.filter(a => a.status === 'ACTIVE').length,
+          assets.filter(a => a.status === 'UNDER_MAINTENANCE').length,
+          assets.filter(a => a.status === 'TRANSFERRED').length,
+          assets.filter(a => a.status === 'DISPOSED').length,
+        ],
+>>>>>>> 56d1f01 (user management)
         backgroundColor: [
           'rgba(75, 192, 192, 0.6)',
           'rgba(255, 206, 86, 0.6)',
@@ -100,6 +177,7 @@ export default function DashboardPage() {
       },
     ],
   };
+<<<<<<< HEAD
 
   const monthlyDepreciationData = {
     labels: dashboardData?.monthlyDepreciation.map((item) => {
@@ -114,6 +192,8 @@ export default function DashboardPage() {
       },
     ],
   };
+=======
+>>>>>>> 56d1f01 (user management)
 
   return (
     <div>
