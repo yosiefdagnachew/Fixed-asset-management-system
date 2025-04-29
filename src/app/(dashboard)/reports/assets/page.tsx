@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { RoleBasedTable } from '@/components/ui/RoleBasedTable';
 import { RoleBasedChart } from '@/components/ui/RoleBasedChart';
+import { ExportButton } from '@/components/ui/ExportButton';
 import { RoleBasedStats } from '@/components/ui/RoleBasedStats';
 import { generatePdf } from '@/lib/generatePdf';
 import { Download } from 'lucide-react';
@@ -52,21 +53,35 @@ export default function AssetReportsPage() {
     if (filterType === 'category') {
       return assetsByCategory.map(item => item.category);
     }
-    return assetsByDepartment.map(item => item.category);
+    return assetsByDepartment.map(item => item.department);
   };
 
+  function isAssetCategoryDataArray(data: any[]): data is AssetCategoryData[] {
+    return data.length === 0 || 'category' in data[0];
+  }
+
+  function isAssetDepartmentDataArray(data: any[]): data is AssetDepartmentData[] {
+    return data.length === 0 || 'department' in data[0];
+  }
+
   const getFilteredData = () => {
-    let filteredData = filterType === 'category' ? assetsByCategory : assetsByDepartment;
-    
-    if (selectedFilter !== 'all') {
-      filteredData = filteredData.filter(item => item.category === selectedFilter);
+    if (filterType === 'category') {
+      let filtered = assetsByCategory;
+      if (selectedFilter !== 'all') {
+        filtered = filtered.filter(item => item.category === selectedFilter);
+      }
+      if (statusFilter !== 'all') {
+        filtered = filtered.filter(item => item.status === statusFilter);
+      }
+      return filtered;
+    } else {
+      let filtered = assetsByDepartment;
+      if (selectedFilter !== 'all') {
+        filtered = filtered.filter(item => item.department === selectedFilter);
+      }
+      // No status filter for department
+      return filtered;
     }
-
-    if (statusFilter !== 'all') {
-      filteredData = filteredData.filter(item => item.status === statusFilter);
-    }
-
-    return filteredData;
   };
 
   if (loading) {
@@ -146,6 +161,13 @@ export default function AssetReportsPage() {
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-semibold mb-6">Asset Reports</h1>
+      <div className="mb-4 flex flex-row gap-4">
+        <ExportButton
+          data={getFilteredData()}
+          columns={exportColumns}
+          fileName={`Asset_Report_${filterType}`}
+        />
+      </div>
 
       {/* Filter Controls */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -231,15 +253,6 @@ export default function AssetReportsPage() {
           description={`${((assetStats?.activeAssets || 0) / (assetStats?.totalAssets || 1) * 100).toFixed(1)}% Active`}
           variant="default"
         />
-        <RoleBasedStats
-          name="Maintenance Cost"
-          value={new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            maximumFractionDigits: 0
-          }).format(assetStats?.maintenanceCost || 0)}
-          variant="warning"
-        />
       </div>
 
       {/* Asset Distribution Charts */}
@@ -253,32 +266,61 @@ export default function AssetReportsPage() {
                 : `Assets in ${selectedFilter}`}
               {statusFilter !== 'all' && ` (${statusFilter})`}
             </h2>
-            {getFilteredData().length > 0 && (
-              <button
-                onClick={() => generatePdf({
-                  title: `Assets by ${filterType === 'category' ? 'Category' : 'Department'} Report`,
-                  data: getFilteredData(),
-                  type: filterType
-                })}
-                className="flex items-center gap-2 px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-              >
-                <Download size={16} />
-                Download PDF
-              </button>
-            )}
+            {(() => {
+  const filteredData = getFilteredData();
+  if (filterType === 'category' && isAssetCategoryDataArray(filteredData) && filteredData.length > 0) {
+    return (
+      <button
+        onClick={() => {
+          const filteredData = getFilteredData();
+          if (isAssetCategoryDataArray(filteredData)) {
+            generatePdf({
+              title: 'Assets by Category Report',
+              data: filteredData,
+              type: 'category',
+            });
+          }
+        }}
+        className="flex items-center gap-2 px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+      >
+        <Download size={16} />
+        Download PDF
+      </button>
+    );
+  }
+  return null;
+})()}
+
+
           </div>
-          {getFilteredData().length > 0 ? (
-            <RoleBasedChart
-              type={selectedFilter === 'all' ? 'pie' : 'bar'}
-              data={getFilteredData()}
-              options={{
-                labels: getFilteredData().map((item) => item.category),
-                values: getFilteredData().map((item) => item.count),
-              }}
-            />
-          ) : (
-            <div className="text-center text-gray-500">No data available</div>
-          )}
+          {(() => {
+            const filteredData = getFilteredData();
+            if (filterType === 'category') {
+              return isAssetCategoryDataArray(filteredData) ? (
+                <RoleBasedChart
+                  type={selectedFilter === 'all' ? 'pie' : 'bar'}
+                  data={filteredData}
+                  options={{
+                    labels: filteredData.map((item) => item.category),
+                    values: filteredData.map((item) => item.count),
+                  }}
+                />
+              ) : <div>No data available</div>;
+            } else if (filterType === 'department') {
+              return isAssetDepartmentDataArray(filteredData) ? (
+                <RoleBasedChart
+                  type={selectedFilter === 'all' ? 'pie' : 'bar'}
+                  data={filteredData}
+                  options={{
+                    labels: filteredData.map((item) => item.department),
+                    values: filteredData.map((item) => item.count),
+                  }}
+                />
+              ) : <div>No data available</div>;
+            } else {
+              return <div>No data available</div>;
+            }
+          })()}
         </div>
 
         {/* Status Distribution */}
@@ -354,11 +396,17 @@ export default function AssetReportsPage() {
               {statusFilter !== 'all' && ` (${statusFilter})`}
             </h2>
             <button
-              onClick={() => generatePdf({
-                title: `Asset Value Details by ${filterType === 'category' ? 'Category' : 'Department'}`,
-                data: getFilteredData(),
-                type: filterType
-              })}
+              onClick={() => {
+  const filteredData = getFilteredData();
+  if (filterType === 'category' && isAssetCategoryDataArray(filteredData)) {
+    generatePdf({
+      title: 'Asset Value Details by Category',
+      data: filteredData,
+      type: 'category',
+    });
+  }
+  // Optionally: else handle department case separately
+}}
               className="flex items-center gap-2 px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
             >
               <Download size={16} />
@@ -367,11 +415,15 @@ export default function AssetReportsPage() {
           </div>
           {getFilteredData().length > 0 ? (
             <RoleBasedTable
-              data={getFilteredData()}
+              data={
+                filterType === 'category'
+                  ? (isAssetCategoryDataArray(getFilteredData()) ? getFilteredData() : [])
+                  : (isAssetDepartmentDataArray(getFilteredData()) ? getFilteredData() : [])
+              }
               columns={[
                 {
                   header: filterType === 'category' ? 'Category' : 'Department',
-                  accessorKey: 'category',
+                  accessorKey: filterType === 'category' ? 'category' : 'department',
                 },
                 {
                   header: 'Status',
@@ -393,7 +445,7 @@ export default function AssetReportsPage() {
                   cell: ({ row }: { row: { original: AssetCategoryData } }) => 
                     `$${(row.original.value / row.original.count).toFixed(2)}`,
                 },
-              ].map((col) => ({ ...col, key: col.accessorKey })) as Column<AssetCategoryData>[]}
+              ].map((col) => ({ ...col, key: col.accessorKey })) as Column<AssetCategoryData | AssetDepartmentData>[]}
             />
           ) : (
             <div className="text-center text-gray-500">No data available</div>

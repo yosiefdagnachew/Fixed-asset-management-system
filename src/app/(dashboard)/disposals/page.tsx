@@ -6,7 +6,10 @@ import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import DisposalForm from './DisposalForm';
 import { RoleBasedBadge } from '@/components/ui/RoleBasedBadge';
+import { RoleBasedButton } from '@/components/ui/RoleBasedButton';
+import { RoleBasedTable } from '@/components/ui/RoleBasedTable';
 import type { DisposalRequest, DisposalStatus } from '@/types/disposals';
+import type { Column } from '@/types/reports';
 
 export default function DisposalsPage() {
   const router = useRouter();
@@ -15,7 +18,7 @@ export default function DisposalsPage() {
   const [disposals, setDisposals] = useState<DisposalRequest[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editDisposal, setEditDisposal] = useState<DisposalRequest | null>(null);
-  const [assets, setAssets] = useState<{ id: string; name: string }[]>([]);
+  const [assets, setAssets] = useState<{ id: keyof DisposalRequest; name: string }[]>([]);
 
   useEffect(() => {
     fetchDisposals();
@@ -46,7 +49,7 @@ export default function DisposalsPage() {
     }
   };
 
-  const handleCreate = async (data: { assetId: string; reason: string; method: string; proceeds?: number | string }) => {
+  const handleCreate = async (data: { assetId: keyof DisposalRequest; reason: keyof DisposalRequest; method: keyof DisposalRequest; proceeds?: number | string }) => {
     try {
       const response = await fetch('/api/disposals', {
         method: 'POST',
@@ -67,7 +70,7 @@ export default function DisposalsPage() {
     }
   };
 
-  const handleEdit = async (data: { assetId: string; reason: string; method: string; proceeds?: number | string }) => {
+  const handleEdit = async (data: { assetId: keyof DisposalRequest; reason: keyof DisposalRequest; method: keyof DisposalRequest; proceeds?: number | string }) => {
     if (!editDisposal) return;
     try {
       const response = await fetch(`/api/disposals/${editDisposal.id}`, {
@@ -111,47 +114,33 @@ export default function DisposalsPage() {
     }
   };
 
-  const columns = [
-    {
-      key: 'assetId',
-      header: 'Asset',
-      render: (value: any, item: DisposalRequest) => typeof item.asset?.name === 'string' ? item.asset.name : String(value),
-    },
-    {
-      key: 'method',
-      header: 'Method',
-      render: (value: any) => <span className="capitalize">{(value as string).toLowerCase()}</span>,
-    },
-    {
-      key: 'proceeds',
-      header: 'Proceeds',
-      render: (value: any, item: DisposalRequest) => {
-        const proceeds = (item && typeof (item as any)?.proceeds !== 'undefined') ? (item as any).proceeds : undefined;
-        return typeof proceeds === 'number' && !isNaN(proceeds) ? `$${proceeds.toFixed(2)}` : '-';
-      },
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (value: any) => <RoleBasedBadge variant={getStatusVariant(value)} label={String(value)} />,
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      render: (_: any, item: DisposalRequest) => (
-        session?.user?.role === 'ADMIN' && (
-          <>
-            <button className="mr-2 bg-yellow-500 text-white px-2 py-1 rounded" onClick={() => setEditDisposal(item)}>
-              Edit
-            </button>
-            <button className="bg-red-600 text-white px-2 py-1 rounded" onClick={() => handleDelete(item)}>
-              Delete
-            </button>
-          </>
-        )
-      ),
-    },
-  ];
+  const columns: Column<DisposalRequest>[] = [
+  {
+    key: 'assetId',
+    header: 'Asset',
+    render: (value: any, item: DisposalRequest) => typeof item.asset?.name === 'string' ? item.asset.name : String(value),
+  },
+  {
+    key: 'method',
+    header: 'Method',
+    render: (value: any) => <span className="capitalize">{(value as string).toLowerCase()}</span>,
+  },
+  {
+    key: 'expectedValue',
+    header: 'Expected Value',
+    render: (value: any) => typeof value === 'number' ? `$${value.toFixed(2)}` : '-',
+  },
+  {
+    key: 'actualValue',
+    header: 'Actual Value',
+    render: (value: any) => typeof value === 'number' ? `$${value.toFixed(2)}` : '-',
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    render: (value: any) => <RoleBasedBadge variant={getStatusVariant(value)} label={String(value)} />,
+  },
+];
 
   return (
     <div className="container mx-auto p-6">
@@ -170,7 +159,7 @@ export default function DisposalsPage() {
         data={disposals}
         columns={columns}
         loading={loading}
-        onRowClick={(value) => router.push(`/disposals/${value}`)}
+        onRowClick={(value: DisposalRequest) => router.push(`/disposals/${value.id}`)}
       />
     </div>
   );

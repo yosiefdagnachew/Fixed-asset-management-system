@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { Role } from "@/types/auth";
 
 export async function apiMiddleware(
-  req: Request,
+  req: NextRequest,
   requiredRole?: Role | Role[]
 ) {
   const token = await getToken({ req });

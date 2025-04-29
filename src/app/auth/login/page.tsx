@@ -1,25 +1,13 @@
 "use client";
 
-<<<<<<< HEAD
-import React, { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-//import toast from "react-hot-toast";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-=======
-import React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { toast } from 'react-hot-toast';
->>>>>>> 56d1f01 (user management)
+import { ToastContainer, toast } from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -64,16 +52,11 @@ export default function LoginPage() {
         return;
       }
 
-<<<<<<< HEAD
-      toast.success("Signed in successfully");
-      router.push("/dashboard");
-      router.refresh();
-=======
       if (result?.ok) {
+        toast.success("Signed in successfully");
         router.push('/dashboard');
         router.refresh();
       }
->>>>>>> 56d1f01 (user management)
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Something went wrong");
@@ -91,7 +74,6 @@ export default function LoginPage() {
         <p className="text-center text-sm text-gray-600 mt-2">
           Sign in to your account
         </p>
-
         <form className="mt-6 space-y-5" onSubmit={handleSubmit(onSubmit)}>
           <div>
             <input

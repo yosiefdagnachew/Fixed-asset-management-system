@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const maintenanceRequest = await prisma.maintenanceRequest.findUnique({
+    const maintenanceRequest = await prisma.maintenance.findUnique({
       where: { id: params.id },
       include: {
         asset: {
@@ -51,7 +51,7 @@ export async function PUT(
     const body = await request.json();
     const { status } = body;
 
-    const maintenanceRequest = await prisma.maintenanceRequest.update({
+    const maintenanceRequest = await prisma.maintenance.update({
       where: { id: params.id },
       data: {
         status,

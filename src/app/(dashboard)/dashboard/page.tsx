@@ -27,23 +27,6 @@ Chart.register(
   ArcElement
 );
 
-<<<<<<< HEAD
-interface DashboardData {
-  stats: {
-    totalAssets: number;
-    activeAssets: number;
-    underMaintenanceAssets: number;
-    totalValue: number;
-  };
-  monthlyDepreciation: Array<{
-    month: string;
-    depreciation: number;
-  }>;
-  statusDistribution: Array<{
-    status: string;
-    count: number;
-  }>;
-=======
 const monthlyDepreciationData = {
   labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
   datasets: [
@@ -75,51 +58,10 @@ interface Asset {
   nextMaintenance?: string | null;
   createdAt: string;
   updatedAt: string;
->>>>>>> 56d1f01 (user management)
 }
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-<<<<<<< HEAD
-  
-  const { data: dashboardData, isLoading } = useQuery<DashboardData>({
-    queryKey: ['dashboardData'],
-    queryFn: async () => {
-      const response = await fetch('/api/dashboard');
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data');
-      }
-      return response.json();
-    },
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  const stats = [
-    { name: 'Total Assets', value: dashboardData?.stats.totalAssets.toString() || '0' },
-    { name: 'Active Assets', value: dashboardData?.stats.activeAssets.toString() || '0' },
-    { name: 'Under Maintenance', value: dashboardData?.stats.underMaintenanceAssets.toString() || '0' },
-    { 
-      name: 'Total Value', 
-      value: new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(dashboardData?.stats.totalValue || 0)
-    },
-  ];
-
-  const statusDistributionData = {
-    labels: dashboardData?.statusDistribution.map((item) => item.status) || [],
-    datasets: [
-      {
-        data: dashboardData?.statusDistribution.map((item) => item.count) || [],
-=======
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -160,7 +102,6 @@ export default function DashboardPage() {
           assets.filter(a => a.status === 'TRANSFERRED').length,
           assets.filter(a => a.status === 'DISPOSED').length,
         ],
->>>>>>> 56d1f01 (user management)
         backgroundColor: [
           'rgba(75, 192, 192, 0.6)',
           'rgba(255, 206, 86, 0.6)',
@@ -177,23 +118,6 @@ export default function DashboardPage() {
       },
     ],
   };
-<<<<<<< HEAD
-
-  const monthlyDepreciationData = {
-    labels: dashboardData?.monthlyDepreciation.map((item) => {
-      const date = new Date(item.month);
-      return date.toLocaleString('default', { month: 'short' });
-    }) || [],
-    datasets: [
-      {
-        label: 'Monthly Depreciation',
-        data: dashboardData?.monthlyDepreciation.map((item) => item.depreciation) || [],
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-      },
-    ],
-  };
-=======
->>>>>>> 56d1f01 (user management)
 
   return (
     <div>
@@ -245,7 +169,7 @@ export default function DashboardPage() {
             Asset Status Distribution
           </h2>
           <div className="h-80">
-            <Pie data={statusDistributionData} />
+            <Pie data={assetStatusData} />
           </div>
         </div>
 
