@@ -2,19 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { RoleBasedTable } from '@/components/ui/RoleBasedTable';
-import { RoleBasedButton } from '@/components/ui/RoleBasedButton';
+import { useSession } from 'next-auth/react';
+import { toast } from 'react-hot-toast';
+import DisposalForm from './DisposalForm';
 import { RoleBasedBadge } from '@/components/ui/RoleBasedBadge';
 import type { DisposalRequest, DisposalStatus } from '@/types/disposals';
-import type { Column } from '@/types/reports';
 
 export default function DisposalsPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
   const [disposals, setDisposals] = useState<DisposalRequest[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editDisposal, setEditDisposal] = useState<DisposalRequest | null>(null);
+  const [assets, setAssets] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     fetchDisposals();
+    fetchAssets();
   }, []);
 
   const fetchDisposals = async () => {
@@ -30,68 +35,120 @@ export default function DisposalsPage() {
     }
   };
 
-  const getStatusVariant = (status: DisposalStatus): 'success' | 'warning' | 'danger' | 'default' => {
-  switch (status) {
-    case 'APPROVED':
-      return 'success';
-    case 'REJECTED':
-      return 'danger';
-    case 'PENDING':
-      return 'warning';
-    default:
-      return 'default';
-  }
-};
+  const fetchAssets = async () => {
+    try {
+      const response = await fetch('/api/assets');
+      if (!response.ok) throw new Error('Failed to fetch assets');
+      const data = await response.json();
+      setAssets(data.map((a: any) => ({ id: a.id, name: a.name })));
+    } catch (error) {
+      toast.error('Failed to load assets');
+    }
+  };
 
-const columns: Column<DisposalRequest>[] = [
+  const handleCreate = async (data: { assetId: string; reason: string; method: string; proceeds?: number | string }) => {
+    try {
+      const response = await fetch('/api/disposals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      console.log('Create Disposal response:', response.status, result);
+      if (!response.ok) {
+        toast.error(result.error || 'Failed to create disposal');
+        return;
+      }
+      toast.success('Disposal created');
+      setShowForm(false);
+      fetchDisposals();
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to create disposal');
+    }
+  };
+
+  const handleEdit = async (data: { assetId: string; reason: string; method: string; proceeds?: number | string }) => {
+    if (!editDisposal) return;
+    try {
+      const response = await fetch(`/api/disposals/${editDisposal.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to update disposal');
+      toast.success('Disposal updated');
+      setEditDisposal(null);
+      fetchDisposals();
+    } catch (error) {
+      toast.error('Failed to update disposal');
+    }
+  };
+
+  const handleDelete = async (disposal: DisposalRequest) => {
+    if (!window.confirm('Are you sure you want to delete this disposal request?')) return;
+    try {
+      const response = await fetch(`/api/disposals/${disposal.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete disposal');
+      toast.success('Disposal deleted');
+      fetchDisposals();
+    } catch (error) {
+      toast.error('Failed to delete disposal');
+    }
+  };
+
+  const getStatusVariant = (status: DisposalStatus): 'success' | 'warning' | 'danger' | 'default' => {
+    switch (status) {
+      case 'APPROVED':
+        return 'success';
+      case 'REJECTED':
+        return 'danger';
+      case 'PENDING':
+        return 'warning';
+      default:
+        return 'default';
+    }
+  };
+
+  const columns = [
     {
       key: 'assetId',
       header: 'Asset',
-      render: (value, item) => typeof item.asset?.name === 'string' ? item.asset.name : String(value),
+      render: (value: any, item: DisposalRequest) => typeof item.asset?.name === 'string' ? item.asset.name : String(value),
     },
     {
       key: 'method',
       header: 'Method',
-      render: (value) => <span className="capitalize">{(value as string).toLowerCase()}</span>,
+      render: (value: any) => <span className="capitalize">{(value as string).toLowerCase()}</span>,
     },
     {
-      key: 'expectedValue',
-      header: 'Expected Value',
-      render: (value) => `$${(value as number).toFixed(2)}`,
-    },
-    {
-      key: 'actualValue',
-      header: 'Actual Value',
-      render: (value) => (typeof value === 'number' ? `$${value.toFixed(2)}` : 'N/A'),
+      key: 'proceeds',
+      header: 'Proceeds',
+      render: (value: any, item: DisposalRequest) => {
+        const proceeds = (item && typeof (item as any)?.proceeds !== 'undefined') ? (item as any).proceeds : undefined;
+        return typeof proceeds === 'number' && !isNaN(proceeds) ? `$${proceeds.toFixed(2)}` : '-';
+      },
     },
     {
       key: 'status',
       header: 'Status',
-      render: (value) => (
-        <RoleBasedBadge
-          label={value as string}
-          variant={getStatusVariant(value as DisposalStatus)}
-        />
-      ),
+      render: (value: any) => <RoleBasedBadge variant={getStatusVariant(value)} label={String(value)} />,
     },
     {
-      key: 'createdAt',
-      header: 'Date',
-      render: (value) => typeof value === 'string' || typeof value === 'number' ? String(value) : value instanceof Date ? value.toLocaleDateString() : '',
-    },
-    {
-      key: 'id',
+      key: 'actions',
       header: 'Actions',
-      render: (value, item) => (
-        <div className="flex space-x-2">
-          <RoleBasedButton
-            onClick={() => router.push(`/disposals/${value}`)}
-            variant="secondary"
-            size="sm"
-          >
-            View
-          </RoleBasedButton>
-        </div>
+      render: (_: any, item: DisposalRequest) => (
+        session?.user?.role === 'ADMIN' && (
+          <>
+            <button className="mr-2 bg-yellow-500 text-white px-2 py-1 rounded" onClick={() => setEditDisposal(item)}>
+              Edit
+            </button>
+            <button className="bg-red-600 text-white px-2 py-1 rounded" onClick={() => handleDelete(item)}>
+              Delete
+            </button>
+          </>
+        )
       ),
     },
   ];
