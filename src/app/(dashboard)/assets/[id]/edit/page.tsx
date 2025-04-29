@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'react-hot-toast';
 
-export default function EditAssetPage({ params }: { params: { id: string } }) {
+export default function EditAssetPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = React.use(params);
   const router = useRouter();
   const { data: session } = useSession();
   const { canManageAssets } = usePermissions();
@@ -33,7 +35,7 @@ export default function EditAssetPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchAsset = async () => {
       try {
-        const response = await fetch(`/api/assets/${params.id}`);
+        const response = await fetch(`/api/assets/${resolvedParams.id}`);
         if (!response.ok) {
           throw new Error('Failed to fetch asset');
         }
@@ -56,14 +58,14 @@ export default function EditAssetPage({ params }: { params: { id: string } }) {
     };
 
     fetchAsset();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/assets/${params.id}`, {
+      const response = await fetch(`/api/assets/${resolvedParams.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
